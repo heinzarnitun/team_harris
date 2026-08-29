@@ -140,7 +140,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const patchProduct = useCallback(
     async (id: string, patch: Parameters<typeof updateProduct>[1]) => {
-      await updateProduct(id, patch);
+      try {
+        await updateProduct(id, patch);
+      } catch (e) {
+        throw e instanceof Error ? e : new Error("Could not update listing");
+      }
       setProducts((prev) =>
         prev.map((p) =>
           p.id === id

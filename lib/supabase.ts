@@ -31,6 +31,12 @@ type ProductRow = {
   profiles: Profile | Profile[] | null;
 };
 
+function throwDb(error: { message?: string; details?: string; hint?: string; code?: string } | null) {
+  if (!error) return;
+  const msg = [error.message, error.details, error.hint, error.code].filter(Boolean).join(" — ");
+  throw new Error(msg || "Database request failed");
+}
+
 function one<T>(v: T | T[] | null | undefined): T | null {
   if (!v) return null;
   return Array.isArray(v) ? v[0] ?? null : v;
@@ -96,7 +102,7 @@ export async function getSessionProfile(): Promise<Profile | null> {
 
 export async function loginUser(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw error;
+  if (error) throwDb(error);
   return data.user;
 }
 
@@ -106,7 +112,7 @@ export async function registerUser(name: string, email: string, password: string
     password,
     options: { data: { name } },
   });
-  if (error) throw error;
+  if (error) throwDb(error);
   if (data.user) {
     await supabase.from("profiles").upsert({
       id: data.user.id,
@@ -128,7 +134,7 @@ export async function getProducts(): Promise<Product[]> {
     .from("products")
     .select("*, profiles(*)")
     .order("created_at", { ascending: false });
-  if (error) throw error;
+  if (error) throwDb(error);
   return ((data ?? []) as ProductRow[]).map(mapProduct);
 }
 
@@ -180,7 +186,7 @@ export async function createProduct(input: {
     },
   };
   const { data, error } = await supabase.from("products").insert(row).select("*, profiles(*)").single();
-  if (error) throw error;
+  if (error) throwDb(error);
   return mapProduct(data as ProductRow);
 }
 
@@ -190,7 +196,7 @@ export async function getChats(userId: string): Promise<ChatThread[]> {
     .select("*")
     .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
     .order("created_at", { ascending: false });
-  if (error) throw error;
+  if (error) throwDb(error);
 
   const threads: ChatThread[] = [];
   for (const c of chats ?? []) {
@@ -238,7 +244,8 @@ export async function startChat(productId: string, buyerId: string, sellerId: st
     .insert({ product_id: productId, buyer_id: buyerId, seller_id: sellerId })
     .select("id")
     .single();
-  if (error) throw error;
+  if (error) throwDb(error);
+  if (!data) throw new Error("Could not start chat");
   return data.id as string;
 }
 
@@ -249,7 +256,7 @@ export async function sendChatMessage(chatId: string, senderId: string, text: st
     text,
     offer_amount: offerAmount ?? null,
   });
-  if (error) throw error;
+  if (error) throwDb(error);
 }
 
 export async function updateProduct(
@@ -262,10 +269,10 @@ export async function updateProduct(
   },
 ) {
   const { error } = await supabase.from("products").update(patch).eq("id", id);
-  if (error) throw error;
+  if (error) throwDb(error);
 }
 
 export async function deleteProduct(id: string) {
   const { error } = await supabase.from("products").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throwDb(error);
 }

@@ -30,6 +30,7 @@ export default function ProductDetail({ product }: { product: Product }) {
   const priceRatio = Math.min(100, Math.round((product.price / Math.max(1, product.marketAverage)) * 100));
 
   const goChat = async () => {
+    if (sold) return;
     if (!requireAuth()) return;
     if (user && product.userId === user.id) {
       setNotice(copy.ownListing);
