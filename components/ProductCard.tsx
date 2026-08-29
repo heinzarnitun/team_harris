@@ -26,9 +26,9 @@ export default function ProductCard({ product }: { product: Product }) {
         <span className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 backdrop-blur-md sm:text-xs">
           🌱 -{product.co2SavedKg}kg CO₂
         </span>
-        {product.barterAvailable && (
-          <span className="absolute bottom-2 left-2 rounded-full bg-slate-900/80 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-md">
-            🔄 Swap OK
+        {product.status === "sold" && (
+          <span className="absolute inset-0 flex items-center justify-center bg-slate-900/55 text-sm font-bold uppercase tracking-wide text-white">
+            Sold out
           </span>
         )}
       </div>

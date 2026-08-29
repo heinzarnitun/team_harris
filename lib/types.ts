@@ -45,6 +45,8 @@ export interface Product {
   barterAvailable: boolean;
   description: string;
   descriptionMy: string;
+  images?: string[];
+  status?: "active" | "sold" | "hidden";
 }
 
 export type ChatSender = "buyer" | "seller" | "system";

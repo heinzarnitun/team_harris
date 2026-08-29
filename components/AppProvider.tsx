@@ -15,6 +15,7 @@ import type { CategoryName, ChatThread, Product } from "@/lib/types";
 import { aiMatchProduct, parseAiQuery } from "@/lib/search";
 import {
   createProduct,
+  deleteProduct,
   getChats,
   getProducts,
   getSessionProfile,
@@ -23,6 +24,7 @@ import {
   registerUser,
   sendChatMessage,
   startChat,
+  updateProduct,
   type Profile,
 } from "@/lib/supabase";
 import { supabase } from "@/lib/supabaseClient";
@@ -48,6 +50,9 @@ interface AppContextValue {
   lang: Lang;
   setLang: (l: Lang) => void;
   addProduct: (product: Omit<Parameters<typeof createProduct>[0], "userId">) => Promise<void>;
+  patchProduct: (id: string, patch: Parameters<typeof updateProduct>[1]) => Promise<void>;
+  removeProduct: (id: string) => Promise<void>;
+  reloadProducts: () => Promise<void>;
   addChatMessage: (threadId: string, text: string, offerAmount?: number) => Promise<void>;
   openChatWithSeller: (product: Product) => Promise<string | null>;
   refreshChats: () => Promise<void>;
@@ -125,6 +130,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [user],
   );
 
+  const reloadProducts = useCallback(async () => {
+    try {
+      setProducts(await getProducts());
+    } catch {
+      /* keep */
+    }
+  }, []);
+
+  const patchProduct = useCallback(
+    async (id: string, patch: Parameters<typeof updateProduct>[1]) => {
+      await updateProduct(id, patch);
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === id
+            ? {
+                ...p,
+                title: patch.title ?? p.title,
+                price: patch.price ?? p.price,
+                images: patch.gallery ?? p.images,
+                status: patch.status ?? p.status,
+              }
+            : p,
+        ),
+      );
+    },
+    [],
+  );
+
+  const removeProduct = useCallback(async (id: string) => {
+    await deleteProduct(id);
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
   const addChatMessage = useCallback(
     async (threadId: string, text: string, offerAmount?: number) => {
       if (!user) return;
@@ -184,6 +222,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       lang,
       setLang,
       addProduct,
+      patchProduct,
+      removeProduct,
+      reloadProducts,
       addChatMessage,
       openChatWithSeller,
       refreshChats,
@@ -206,6 +247,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       user,
       lang,
       addProduct,
+      patchProduct,
+      removeProduct,
+      reloadProducts,
       addChatMessage,
       openChatWithSeller,
       refreshChats,

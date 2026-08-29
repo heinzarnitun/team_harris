@@ -1,6 +1,7 @@
 "use client";
 
 import { BadgeCheck, Leaf, ShieldCheck } from "lucide-react";
+import MyListings from "@/components/MyListings";
 import { t } from "@/lib/i18n";
 import { useApp } from "@/components/AppProvider";
 
@@ -65,6 +66,7 @@ export default function ProfilePage() {
           {copy.logout}
         </button>
       </div>
+      <MyListings />
       <p className="break-words rounded-2xl border border-slate-200 bg-white p-5 text-sm leading-relaxed text-slate-600 shadow-sm">
         ကြိုဆိုပါတယ်။ EcoLoop သည် AI Verified Second-Hand ပစ္စည်းများကို အနီးအနားတွင် Barter၊ ရောင်းချ၊
         လက်ဆောင်ပေးနိုင်သော Circular Economy စျေးကွက် ဖြစ်သည်။

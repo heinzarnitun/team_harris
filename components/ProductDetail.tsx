@@ -17,10 +17,14 @@ function severityColor(severity: ProductDefect["severity"]) {
 
 export default function ProductDetail({ product }: { product: Product }) {
   const router = useRouter();
-  const { user, requireAuth, openChatWithSeller, lang } = useApp();
+  const { user, requireAuth, openChatWithSeller, lang, patchProduct, removeProduct } = useApp();
   const copy = t[lang];
+  const gallery = product.images?.length ? product.images : [product.image];
+  const [hero, setHero] = useState(gallery[0]);
   const [activeDefect, setActiveDefect] = useState<ProductDefect | null>(null);
   const [notice, setNotice] = useState("");
+  const sold = product.status === "sold";
+  const mine = Boolean(user && product.userId === user.id);
   const delta = Math.round(((product.marketAverage - product.price) / Math.max(1, product.marketAverage)) * 100);
   const below = delta > 0;
   const priceRatio = Math.min(100, Math.round((product.price / Math.max(1, product.marketAverage)) * 100));
@@ -50,7 +54,12 @@ export default function ProductDetail({ product }: { product: Product }) {
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="relative aspect-[4/3] bg-slate-100">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={product.image} alt={product.title} className="h-full w-full object-cover" />
+            <img src={hero} alt={product.title} className="h-full w-full object-cover" />
+            {sold && (
+              <span className="absolute inset-0 flex items-center justify-center bg-slate-900/50 text-lg font-bold text-white">
+                Sold out
+              </span>
+            )}
             {product.defects.map((d) => (
               <button
                 key={`${d.x}-${d.y}-${d.label}`}
@@ -82,6 +91,20 @@ export default function ProductDetail({ product }: { product: Product }) {
             Tap a pulse dot to inspect AI-detected wear. {product.defects.length} hotspot
             {product.defects.length === 1 ? "" : "s"} found.
           </p>
+          {gallery.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto px-4 pb-4">
+              {gallery.map((src) => (
+                <button key={src} type="button" onClick={() => setHero(src)} className="shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={src}
+                    alt=""
+                    className={`h-16 w-16 rounded-xl object-cover ring-2 ${hero === src ? "ring-emerald-600" : "ring-transparent"}`}
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -145,6 +168,28 @@ export default function ProductDetail({ product }: { product: Product }) {
               />
             </div>
           </div>
+          {mine && (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => void patchProduct(product.id, { status: sold ? "active" : "sold" })}
+                className="flex-1 rounded-xl border border-amber-200 bg-amber-50 py-2 text-sm font-medium text-amber-900"
+              >
+                {sold ? "Relist" : "Mark sold out"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm("Delete listing?")) {
+                    void removeProduct(product.id).then(() => router.push("/"));
+                  }
+                }}
+                className="flex-1 rounded-xl border border-rose-200 bg-rose-50 py-2 text-sm font-medium text-rose-800"
+              >
+                Delete
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -154,16 +199,24 @@ export default function ProductDetail({ product }: { product: Product }) {
           <div className="flex gap-3">
           <button
             type="button"
-            onClick={() => void goChat()}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3 text-sm font-semibold text-white hover:bg-emerald-700"
+            onClick={() => {
+              if (sold) return;
+              void goChat();
+            }}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+            disabled={sold}
           >
             <MessageCircle className="h-4 w-4" />
             {copy.negotiate}
           </button>
           <button
             type="button"
-            onClick={() => void goChat()}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 py-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-100"
+            onClick={() => {
+              if (sold) return;
+              void goChat();
+            }}
+            disabled={sold}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 py-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
           >
             <RefreshCw className="h-4 w-4" />
             {copy.swap}

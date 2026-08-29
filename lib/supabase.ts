@@ -25,6 +25,8 @@ type ProductRow = {
   co2_saved_kg: number | null;
   defects: ProductDefect[] | null;
   trading_type: "sale" | "barter" | "free";
+  gallery: string[] | null;
+  status: "active" | "sold" | "hidden" | null;
   meta: Record<string, unknown> | null;
   profiles: Profile | Profile[] | null;
 };
@@ -66,6 +68,14 @@ export function mapProduct(row: ProductRow): Product {
     description: String(meta.description ?? ""),
     descriptionMy: String(meta.descriptionMy ?? ""),
     tradingType: row.trading_type,
+    images: Array.from(
+      new Set(
+        [row.image_url, ...((row.gallery as string[] | null) ?? []), ...((meta.images as string[] | undefined) ?? [])].filter(
+          (u): u is string => Boolean(u),
+        ),
+      ),
+    ),
+    status: row.status === "sold" || row.status === "hidden" ? row.status : "active",
   };
 }
 
@@ -138,9 +148,11 @@ export async function createProduct(input: {
   description: string;
   descriptionMy: string;
   userId: string;
+  gallery?: string[];
 }): Promise<Product> {
   const trading_type =
     input.tradingMode === "giveaway" ? "free" : input.tradingMode === "barter" ? "barter" : "sale";
+  const extras = (input.gallery ?? []).filter((u) => u && u !== input.imageUrl);
   const row = {
     id: `p-${Date.now()}`,
     user_id: input.userId,
@@ -156,12 +168,15 @@ export async function createProduct(input: {
     co2_saved_kg: input.co2SavedKg,
     defects: input.defects,
     trading_type,
+    gallery: extras,
+    status: "active",
     meta: {
       marketAverage: input.price,
       eWastePreventedKg: 2.4,
       description: input.description,
       descriptionMy: input.descriptionMy,
       aiVerified: true,
+      images: extras,
     },
   };
   const { data, error } = await supabase.from("products").insert(row).select("*, profiles(*)").single();
@@ -234,5 +249,23 @@ export async function sendChatMessage(chatId: string, senderId: string, text: st
     text,
     offer_amount: offerAmount ?? null,
   });
+  if (error) throw error;
+}
+
+export async function updateProduct(
+  id: string,
+  patch: {
+    title?: string;
+    price?: number;
+    gallery?: string[];
+    status?: "active" | "sold" | "hidden";
+  },
+) {
+  const { error } = await supabase.from("products").update(patch).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteProduct(id: string) {
+  const { error } = await supabase.from("products").delete().eq("id", id);
   if (error) throw error;
 }
