@@ -28,6 +28,8 @@ create table if not exists public.products (
   defects jsonb not null default '[]'::jsonb,
   trading_type text not null check (trading_type in ('sale', 'barter', 'free')),
   meta jsonb not null default '{}'::jsonb,
+  gallery jsonb not null default '[]'::jsonb,
+  status text not null default 'active',
   created_at timestamptz not null default now()
 );
 
