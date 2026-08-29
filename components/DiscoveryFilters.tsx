@@ -1,6 +1,7 @@
 "use client";
 
 import { MOCK_CATEGORIES } from "@/lib/mockData";
+import { t } from "@/lib/i18n";
 import type { CategoryName } from "@/lib/types";
 import { useApp } from "./AppProvider";
 
@@ -12,7 +13,9 @@ export default function DiscoveryFilters() {
     setAiVerifiedOnly,
     barterOnly,
     setBarterOnly,
+    lang,
   } = useApp();
+  const copy = t[lang];
 
   return (
     <div className="space-y-3">
@@ -43,7 +46,7 @@ export default function DiscoveryFilters() {
             onChange={(e) => setAiVerifiedOnly(e.target.checked)}
             className="h-4 w-4 rounded border-slate-300 accent-emerald-600"
           />
-          ✨ AI Verified Only
+          {copy.aiVerifiedOnly}
         </label>
         <label className="inline-flex cursor-pointer items-center gap-2">
           <input
@@ -52,7 +55,7 @@ export default function DiscoveryFilters() {
             onChange={(e) => setBarterOnly(e.target.checked)}
             className="h-4 w-4 rounded border-slate-300 accent-emerald-600"
           />
-          🔄 Barter/Swap Available
+          {copy.barterOnly}
         </label>
       </div>
     </div>

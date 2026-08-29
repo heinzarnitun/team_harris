@@ -25,6 +25,8 @@ export interface Seller {
 
 export interface Product {
   id: string;
+  userId?: string;
+  tradingType?: "sale" | "barter" | "free";
   title: string;
   price: number;
   originalPrice: number;

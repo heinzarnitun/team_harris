@@ -4,6 +4,7 @@ import { AppProvider } from "@/components/AppProvider";
 import Navbar from "@/components/Navbar";
 import MobileNav from "@/components/MobileNav";
 import AISnapToListModal from "@/components/AISnapToListModal";
+import AuthModal from "@/components/AuthModal";
 import "./globals.css";
 
 const inter = Inter({
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <main className="pb-24 md:pb-8">{children}</main>
           <MobileNav />
           <AISnapToListModal />
+          <AuthModal />
         </AppProvider>
       </body>
     </html>

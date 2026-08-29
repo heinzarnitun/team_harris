@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, Upload, X } from "lucide-react";
 import { AI_SCAN_STEPS } from "@/lib/mockData";
-import type { Product, TradingMode } from "@/lib/types";
+import { t } from "@/lib/i18n";
+import type { TradingMode } from "@/lib/types";
 import { useApp } from "./AppProvider";
 
 const EN_DESC =
@@ -14,16 +15,17 @@ const MY_DESC =
 type Phase = "idle" | "scanning" | "form" | "published";
 
 export default function AISnapToListModal() {
-  const { sellModalOpen, setSellModalOpen, addProduct } = useApp();
+  const { sellModalOpen, setSellModalOpen, addProduct, lang: uiLang } = useApp();
   const inputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>("idle");
   const [preview, setPreview] = useState<string | null>(null);
   const [scanStep, setScanStep] = useState(0);
   const [title, setTitle] = useState("Compact Oak Side Table");
   const [category, setCategory] = useState("🔄 Barter/Swap");
-  const [lang, setLang] = useState<"en" | "my">("en");
+  const [descLang, setDescLang] = useState<"en" | "my">("en");
   const [price, setPrice] = useState(24);
   const [mode, setMode] = useState<TradingMode>("direct");
+  const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
 
   const close = () => {
@@ -33,9 +35,10 @@ export default function AISnapToListModal() {
     setScanStep(0);
     setTitle("Compact Oak Side Table");
     setCategory("🔄 Barter/Swap");
-    setLang("en");
+    setDescLang("en");
     setPrice(24);
     setMode("direct");
+    setError("");
   };
 
   useEffect(() => {
@@ -59,42 +62,33 @@ export default function AISnapToListModal() {
     setPhase("scanning");
   };
 
-  const publish = () => {
-    const product: Product = {
-      id: `p-${Date.now()}`,
-      title,
-      price: mode === "giveaway" ? 0 : price,
-      originalPrice: 48,
-      marketAverage: 24,
-      category: category as Product["category"],
-      image:
-        preview ||
-        "https://images.unsplash.com/photo-1533090488595-6b2d85d3ba34?auto=format&fit=crop&w=1200&q=80",
-      distance: "0.2 km away",
-      location: "Downtown",
-      aiConditionScore: 91,
-      aiConditionLabel: "Like New",
-      co2SavedKg: 5.1,
-      eWastePreventedKg: 2.4,
-      defects: [
-        { x: 40, y: 48, label: "Light wear on table edge", severity: "minor" },
-      ],
-      seller: {
-        name: "Alex Rivera",
-        avatar:
-          "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=200&q=80",
-        trustScore: 96,
-        verified: true,
-        responseRate: "< 15 mins",
-      },
-      aiVerified: true,
-      barterAvailable: mode !== "direct",
-      description: EN_DESC,
-      descriptionMy: MY_DESC,
-    };
-    addProduct(product);
-    setPhase("published");
-    window.setTimeout(() => close(), 1400);
+  const publish = async () => {
+    setError("");
+    try {
+      await addProduct({
+        title,
+        price: mode === "giveaway" ? 0 : price,
+        originalPrice: 48,
+        category,
+        imageUrl:
+          preview && !preview.startsWith("blob:")
+            ? preview
+            : "https://images.unsplash.com/photo-1533090488595-6b2d85d3ba34?auto=format&fit=crop&w=1200&q=80",
+        distance: "0.2 km away",
+        location: "Downtown",
+        aiConditionScore: 91,
+        aiConditionLabel: "Like New",
+        co2SavedKg: 5.1,
+        defects: [{ x: 40, y: 48, label: "Light wear on table edge", severity: "minor" }],
+        tradingMode: mode,
+        description: EN_DESC,
+        descriptionMy: MY_DESC,
+      });
+      setPhase("published");
+      window.setTimeout(() => close(), 1400);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not publish");
+    }
   };
 
   return (
@@ -208,22 +202,22 @@ export default function AISnapToListModal() {
                   <div className="flex rounded-full border border-slate-200 p-0.5 text-xs">
                     <button
                       type="button"
-                      onClick={() => setLang("en")}
-                      className={`rounded-full px-2.5 py-1 ${lang === "en" ? "bg-emerald-600 text-white" : "text-slate-600"}`}
+                      onClick={() => setDescLang("en")}
+                      className={`rounded-full px-2.5 py-1 ${descLang === "en" ? "bg-emerald-600 text-white" : "text-slate-600"}`}
                     >
                       English
                     </button>
                     <button
                       type="button"
-                      onClick={() => setLang("my")}
-                      className={`rounded-full px-2.5 py-1 ${lang === "my" ? "bg-emerald-600 text-white" : "text-slate-600"}`}
+                      onClick={() => setDescLang("my")}
+                      className={`rounded-full px-2.5 py-1 ${descLang === "my" ? "bg-emerald-600 text-white" : "text-slate-600"}`}
                     >
                       မြန်မာ
                     </button>
                   </div>
                 </div>
                 <p className="whitespace-pre-wrap break-words rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm leading-relaxed text-slate-700">
-                  {lang === "en" ? EN_DESC : MY_DESC}
+                  {descLang === "en" ? EN_DESC : MY_DESC}
                 </p>
               </div>
 
@@ -278,8 +272,9 @@ export default function AISnapToListModal() {
                 className="flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3 font-semibold text-white hover:bg-emerald-700"
               >
                 <Sparkles className="h-4 w-4" />
-                Publish Listing
+                {t[uiLang].publish}
               </button>
+              {error && <p className="text-center text-sm text-rose-600">{error}</p>}
             </>
           )}
 

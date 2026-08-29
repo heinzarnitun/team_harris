@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, MessageCircle, Plus, Sparkles } from "lucide-react";
 import { useState } from "react";
-import { CURRENT_USER, MOCK_LOCATIONS } from "@/lib/mockData";
+import { MOCK_LOCATIONS } from "@/lib/mockData";
+import { t } from "@/lib/i18n";
 import { useApp } from "./AppProvider";
 
 export default function Navbar() {
@@ -16,7 +17,13 @@ export default function Navbar() {
     setLocation,
     setSellModalOpen,
     unreadCount,
+    user,
+    setAuthOpen,
+    lang,
+    setLang,
+    requireAuth,
   } = useApp();
+  const copy = t[lang];
   const [locOpen, setLocOpen] = useState(false);
 
   return (
@@ -70,19 +77,37 @@ export default function Navbar() {
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search with AI (e.g., 'compact wooden desk under $50')..."
+            placeholder={copy.searchPh}
             className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
         </form>
 
         <div className="flex shrink-0 items-center gap-2">
+          <div className="flex rounded-full border border-slate-200 p-0.5 text-[11px] font-medium">
+            <button
+              type="button"
+              onClick={() => setLang("en")}
+              className={`rounded-full px-2 py-1 ${lang === "en" ? "bg-emerald-600 text-white" : "text-slate-600"}`}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              onClick={() => setLang("my")}
+              className={`rounded-full px-2 py-1 ${lang === "my" ? "bg-emerald-600 text-white" : "text-slate-600"}`}
+            >
+              မြန်မာ
+            </button>
+          </div>
           <button
             type="button"
-            onClick={() => setSellModalOpen(true)}
+            onClick={() => {
+              if (requireAuth()) setSellModalOpen(true);
+            }}
             className="hidden items-center gap-1 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 sm:inline-flex"
           >
             <Plus className="h-4 w-4" />
-            Sell Item
+            {copy.sell.replace("+ ", "")}
           </button>
           <Link
             href="/chat"
@@ -94,14 +119,24 @@ export default function Navbar() {
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />
             )}
           </Link>
-          <Link href="/profile" className="hidden sm:block">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={CURRENT_USER.avatar}
-              alt={CURRENT_USER.name}
-              className="h-9 w-9 rounded-full object-cover ring-2 ring-emerald-100"
-            />
-          </Link>
+          {user ? (
+            <Link href="/profile" className="hidden sm:block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={user.avatar_url || "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=200&q=80"}
+                alt={user.name}
+                className="h-9 w-9 rounded-full object-cover ring-2 ring-emerald-100"
+              />
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setAuthOpen(true)}
+              className="hidden rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:inline"
+            >
+              {copy.login}
+            </button>
+          )}
         </div>
       </div>
     </header>

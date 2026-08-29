@@ -4,12 +4,27 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
-import { MOCK_CHATS, MOCK_LOCATIONS, MOCK_PRODUCTS } from "@/lib/mockData";
+import { MOCK_CHATS, MOCK_LOCATIONS } from "@/lib/mockData";
+import type { Lang } from "@/lib/i18n";
 import type { CategoryName, ChatThread, Product } from "@/lib/types";
+import {
+  createProduct,
+  getChats,
+  getProducts,
+  getSessionProfile,
+  loginUser,
+  logoutUser,
+  registerUser,
+  sendChatMessage,
+  startChat,
+  type Profile,
+} from "@/lib/supabase";
+import { supabase } from "@/lib/supabaseClient";
 
 interface AppContextValue {
   products: Product[];
@@ -26,15 +41,26 @@ interface AppContextValue {
   setLocation: (l: string) => void;
   sellModalOpen: boolean;
   setSellModalOpen: (open: boolean) => void;
-  addProduct: (product: Product) => void;
-  addChatMessage: (threadId: string, text: string, offerAmount?: number) => void;
+  authOpen: boolean;
+  setAuthOpen: (open: boolean) => void;
+  user: Profile | null;
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  addProduct: (product: Omit<Parameters<typeof createProduct>[0], "userId">) => Promise<void>;
+  addChatMessage: (threadId: string, text: string, offerAmount?: number) => Promise<void>;
+  openChatWithSeller: (product: Product) => Promise<string | null>;
+  refreshChats: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  requireAuth: () => boolean;
   unreadCount: number;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const [chats, setChats] = useState<ChatThread[]>(MOCK_CHATS);
   const [selectedCategory, setSelectedCategory] = useState<CategoryName>("All");
   const [aiVerifiedOnly, setAiVerifiedOnly] = useState(false);
@@ -42,41 +68,98 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useState(MOCK_LOCATIONS[0]);
   const [sellModalOpen, setSellModalOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [user, setUser] = useState<Profile | null>(null);
+  const [lang, setLang] = useState<Lang>("en");
 
-  const addProduct = useCallback((product: Product) => {
-    setProducts((prev) => [product, ...prev]);
+  const refreshChats = useCallback(async () => {
+    if (!user) {
+      setChats([]);
+      return;
+    }
+    try {
+      setChats(await getChats(user.id));
+    } catch {
+      setChats([]);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        queueMicrotask(() => setUser(null));
+        return;
+      }
+      void getSessionProfile().then((profile) => setUser(profile));
+    });
+    void getProducts()
+      .then((rows) => setProducts(rows))
+      .catch(() => undefined);
+    void getSessionProfile().then((profile) => setUser(profile));
+    return () => data.subscription.unsubscribe();
   }, []);
 
-  const addChatMessage = useCallback(
-    (threadId: string, text: string, offerAmount?: number) => {
-      setChats((prev) =>
-        prev.map((thread) => {
-          if (thread.id !== threadId) return thread;
-          return {
-            ...thread,
-            unread: 0,
-            activeOffer: offerAmount ?? thread.activeOffer,
-            messages: [
-              ...thread.messages,
-              {
-                id: `m-${Date.now()}`,
-                sender: "buyer" as const,
-                text,
-                timestamp: "Just now",
-                offerAmount,
-              },
-            ],
-          };
-        }),
-      );
+  useEffect(() => {
+    if (!user) {
+      queueMicrotask(() => setChats([]));
+      return;
+    }
+    void getChats(user.id)
+      .then((rows) => setChats(rows))
+      .catch(() => setChats([]));
+  }, [user]);
+
+  const requireAuth = useCallback(() => {
+    if (user) return true;
+    setAuthOpen(true);
+    return false;
+  }, [user]);
+
+  const addProduct = useCallback(
+    async (product: Omit<Parameters<typeof createProduct>[0], "userId">) => {
+      if (!user) throw new Error("Not signed in");
+      const created = await createProduct({ ...product, userId: user.id });
+      setProducts((prev) => [created, ...prev]);
     },
-    [],
+    [user],
   );
 
-  const unreadCount = useMemo(
-    () => chats.reduce((sum, t) => sum + t.unread, 0),
-    [chats],
+  const addChatMessage = useCallback(
+    async (threadId: string, text: string, offerAmount?: number) => {
+      if (!user) return;
+      await sendChatMessage(threadId, user.id, text, offerAmount);
+      await refreshChats();
+    },
+    [user, refreshChats],
   );
+
+  const openChatWithSeller = useCallback(
+    async (product: Product) => {
+      if (!user || !product.userId) return null;
+      const id = await startChat(product.id, user.id, product.userId);
+      await refreshChats();
+      return id;
+    },
+    [user, refreshChats],
+  );
+
+  const login = useCallback(async (email: string, password: string) => {
+    await loginUser(email, password);
+    setUser(await getSessionProfile());
+  }, []);
+
+  const register = useCallback(async (name: string, email: string, password: string) => {
+    await registerUser(name, email, password);
+    setUser(await getSessionProfile());
+  }, []);
+
+  const logout = useCallback(async () => {
+    await logoutUser();
+    setUser(null);
+    setChats([]);
+  }, []);
+
+  const unreadCount = useMemo(() => chats.reduce((sum, c) => sum + c.unread, 0), [chats]);
 
   const value = useMemo(
     () => ({
@@ -94,8 +177,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setLocation,
       sellModalOpen,
       setSellModalOpen,
+      authOpen,
+      setAuthOpen,
+      user,
+      lang,
+      setLang,
       addProduct,
       addChatMessage,
+      openChatWithSeller,
+      refreshChats,
+      login,
+      register,
+      logout,
+      requireAuth,
       unreadCount,
     }),
     [
@@ -107,8 +201,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       searchQuery,
       location,
       sellModalOpen,
+      authOpen,
+      user,
+      lang,
       addProduct,
       addChatMessage,
+      openChatWithSeller,
+      refreshChats,
+      login,
+      register,
+      logout,
+      requireAuth,
       unreadCount,
     ],
   );

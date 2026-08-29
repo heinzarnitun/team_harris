@@ -3,19 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, MessageCircle, Plus, Search, User } from "lucide-react";
+import { t } from "@/lib/i18n";
 import { useApp } from "./AppProvider";
-
-const items = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/search", label: "Search", icon: Search },
-  { href: "__sell__", label: "Sell", icon: Plus },
-  { href: "/chat", label: "Messages", icon: MessageCircle },
-  { href: "/profile", label: "Profile", icon: User },
-];
 
 export default function MobileNav() {
   const pathname = usePathname();
-  const { setSellModalOpen, unreadCount } = useApp();
+  const { setSellModalOpen, unreadCount, requireAuth, lang } = useApp();
+  const copy = t[lang];
+  const items = [
+    { href: "/", label: copy.home, icon: Home },
+    { href: "/search", label: copy.search, icon: Search },
+    { href: "__sell__", label: "Sell", icon: Plus },
+    { href: "/chat", label: copy.messages, icon: MessageCircle },
+    { href: "/profile", label: copy.profile, icon: User },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden">
@@ -34,7 +35,9 @@ export default function MobileNav() {
               <li key={item.label}>
                 <button
                   type="button"
-                  onClick={() => setSellModalOpen(true)}
+                  onClick={() => {
+                    if (requireAuth()) setSellModalOpen(true);
+                  }}
                   className="-mt-5 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-700"
                   aria-label="Sell item"
                 >

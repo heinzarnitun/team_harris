@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, BadgeCheck, MessageCircle, RefreshCw } from "lucide-react";
 import type { Product, ProductDefect } from "@/lib/types";
+import { t } from "@/lib/i18n";
+import { useApp } from "./AppProvider";
 
 function severityColor(severity: ProductDefect["severity"]) {
   if (severity === "major") return "bg-rose-500";
@@ -12,10 +15,28 @@ function severityColor(severity: ProductDefect["severity"]) {
 }
 
 export default function ProductDetail({ product }: { product: Product }) {
+  const router = useRouter();
+  const { user, requireAuth, openChatWithSeller, lang } = useApp();
+  const copy = t[lang];
   const [activeDefect, setActiveDefect] = useState<ProductDefect | null>(null);
-  const delta = Math.round(((product.marketAverage - product.price) / product.marketAverage) * 100);
+  const [notice, setNotice] = useState("");
+  const delta = Math.round(((product.marketAverage - product.price) / Math.max(1, product.marketAverage)) * 100);
   const below = delta > 0;
-  const priceRatio = Math.min(100, Math.round((product.price / product.marketAverage) * 100));
+  const priceRatio = Math.min(100, Math.round((product.price / Math.max(1, product.marketAverage)) * 100));
+
+  const goChat = async () => {
+    if (!requireAuth()) return;
+    if (user && product.userId === user.id) {
+      setNotice(copy.ownListing);
+      return;
+    }
+    try {
+      const id = await openChatWithSeller(product);
+      if (id) router.push(`/chat?c=${id}`);
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : copy.loginToChat);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-28 pt-4">
@@ -127,21 +148,26 @@ export default function ProductDetail({ product }: { product: Product }) {
       </div>
 
       <div className="fixed bottom-16 left-0 right-0 z-30 border-t border-slate-200 bg-white/95 p-3 backdrop-blur md:bottom-0">
-        <div className="mx-auto flex max-w-5xl gap-3">
-          <Link
-            href="/chat"
+        <div className="mx-auto flex max-w-5xl flex-col gap-2">
+          {notice && <p className="text-center text-xs text-amber-700">{notice}</p>}
+          <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => void goChat()}
             className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 py-3 text-sm font-semibold text-white hover:bg-emerald-700"
           >
             <MessageCircle className="h-4 w-4" />
-            Negotiate / Chat
-          </Link>
-          <Link
-            href="/chat"
+            {copy.negotiate}
+          </button>
+          <button
+            type="button"
+            onClick={() => void goChat()}
             className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 py-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-100"
           >
             <RefreshCw className="h-4 w-4" />
-            Propose Swap
-          </Link>
+            {copy.swap}
+          </button>
+          </div>
         </div>
       </div>
     </div>

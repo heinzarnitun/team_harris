@@ -1,23 +1,45 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ImagePlus, Send } from "lucide-react";
+import { t } from "@/lib/i18n";
 import { useApp } from "./AppProvider";
 import AIDealCopilot from "./AIDealCopilot";
 import MakeOfferModal from "./MakeOfferModal";
 
 export default function ChatWorkspace() {
-  const { chats, products, addChatMessage } = useApp();
-  const [activeId, setActiveId] = useState(chats[0]?.id ?? "");
-  const [mobileShowThread, setMobileShowThread] = useState(false);
+  const { chats, products, addChatMessage, user, setAuthOpen, lang } = useApp();
+  const params = useSearchParams();
+  const requested = params.get("c");
+  const [pickedId, setPickedId] = useState<string | null>(null);
+  const [mobileShowThread, setMobileShowThread] = useState(Boolean(requested));
   const [draft, setDraft] = useState("");
   const [offerOpen, setOfferOpen] = useState(false);
+  const copy = t[lang];
+  const activeId = pickedId || requested || chats[0]?.id || "";
 
   const thread = chats.find((c) => c.id === activeId) ?? chats[0];
   const product = useMemo(
     () => products.find((p) => p.id === thread?.productId),
     [products, thread?.productId],
   );
+
+  if (!user) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-16 text-center">
+        <p className="text-slate-600">{copy.loginToChat}</p>
+        <button
+          type="button"
+          onClick={() => setAuthOpen(true)}
+          className="mt-4 rounded-2xl bg-emerald-600 px-4 py-2 font-semibold text-white"
+        >
+          {copy.login}
+        </button>
+        <p className="mt-3 text-xs text-slate-500">{copy.demo}</p>
+      </div>
+    );
+  }
 
   if (!thread || !product) {
     return (
@@ -27,10 +49,10 @@ export default function ChatWorkspace() {
     );
   }
 
-  const send = (text: string, offerAmount?: number) => {
+  const send = async (text: string, offerAmount?: number) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    addChatMessage(thread.id, trimmed, offerAmount);
+    await addChatMessage(thread.id, trimmed, offerAmount);
     setDraft("");
   };
 
@@ -43,7 +65,7 @@ export default function ChatWorkspace() {
     <div className="mx-auto flex h-[calc(100dvh-8.5rem)] max-w-6xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:h-[calc(100dvh-6rem)]">
       <aside className={`${mobileShowThread ? "hidden md:flex" : "flex"} w-full flex-col border-r border-slate-200 md:w-80`}>
         <div className="border-b border-slate-200 px-4 py-3">
-          <h1 className="font-semibold text-slate-900">Messages</h1>
+          <h1 className="font-semibold text-slate-900">{copy.messages}</h1>
           <p className="text-xs text-slate-500">Local deals with AI copilot</p>
         </div>
         <ul className="flex-1 overflow-y-auto">
@@ -56,7 +78,7 @@ export default function ChatWorkspace() {
                 <button
                   type="button"
                   onClick={() => {
-                    setActiveId(c.id);
+                    setPickedId(c.id);
                     setMobileShowThread(true);
                   }}
                   className={`flex w-full gap-3 px-4 py-3 text-left hover:bg-slate-50 ${
