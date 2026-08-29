@@ -22,12 +22,16 @@ async function proxy(req: NextRequest, path: string[]) {
 
   const upstream = await fetch(target, init);
   const skipOut = new Set(["transfer-encoding", "content-encoding", "content-length", "set-cookie"]);
-  const buf = await upstream.arrayBuffer();
   const out = new Headers();
   upstream.headers.forEach((value, key) => {
     if (skipOut.has(key.toLowerCase())) return;
     out.set(key, value);
   });
+  // Fetch forbids a body on 204/205/304 — PostgREST PATCH/DELETE often return 204.
+  if (upstream.status === 204 || upstream.status === 205 || upstream.status === 304) {
+    return new NextResponse(null, { status: upstream.status, headers: out });
+  }
+  const buf = await upstream.arrayBuffer();
   return new NextResponse(buf, { status: upstream.status, headers: out });
 }
 
