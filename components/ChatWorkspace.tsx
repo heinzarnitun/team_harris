@@ -1,21 +1,31 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ImagePlus, Send, Sparkles } from "lucide-react";
 import { formatKs } from "@/lib/money";
 import { t } from "@/lib/i18n";
 import { GUIDE_STARTERS_EN, GUIDE_STARTERS_MY, marketGuideReply } from "@/lib/marketBot";
+import type { Product } from "@/lib/types";
 import { useApp } from "./AppProvider";
 import AIDealCopilot from "./AIDealCopilot";
 import MakeOfferModal from "./MakeOfferModal";
 
 const GUIDE_ID = "ecoloop-guide";
 
-type GuideMsg = { id: string; role: "user" | "bot"; text: string };
+type GuideMsg = {
+  id: string;
+  role: "user" | "bot";
+  text: string;
+  listings?: Product[];
+  sellCta?: boolean;
+};
 
 export default function ChatWorkspace() {
-  const { chats, products, addChatMessage, user, setAuthOpen, lang, location } = useApp();
+  const { chats, products, addChatMessage, user, setAuthOpen, lang, location, setSellModalOpen, openChatWithSeller } =
+    useApp();
+  const router = useRouter();
   const params = useSearchParams();
   const requested = params.get("c");
   const [pickedId, setPickedId] = useState<string | null>(null);
@@ -74,9 +84,21 @@ export default function ChatWorkspace() {
     setGuideMsgs((prev) => [
       ...prev,
       { id: `u-${Date.now()}`, role: "user", text: trimmed },
-      { id: `b-${Date.now()}`, role: "bot", text: reply },
+      {
+        id: `b-${Date.now()}`,
+        role: "bot",
+        text: reply.text,
+        listings: reply.listings,
+        sellCta: reply.sellCta,
+      },
     ]);
     setDraft("");
+  };
+
+  const messageSeller = async (p: Product) => {
+    if (user && p.userId === user.id) return;
+    const id = await openChatWithSeller(p);
+    if (id) router.push(`/chat?c=${id}`);
   };
 
   const onSubmit = (e: FormEvent) => {
@@ -185,11 +207,46 @@ export default function ChatWorkspace() {
             {guideMsgs.map((m) => (
               <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm leading-relaxed break-words ${
+                  className={`max-w-[92%] space-y-2 rounded-2xl px-3 py-2 text-sm leading-relaxed break-words ${
                     m.role === "user" ? "bg-emerald-600 text-white" : "border border-slate-200 bg-white text-slate-800"
                   }`}
                 >
-                  {m.text}
+                  <p className="whitespace-pre-wrap">{m.text}</p>
+                  {m.sellCta && (
+                    <button
+                      type="button"
+                      onClick={() => setSellModalOpen(true)}
+                      className="w-full rounded-xl bg-emerald-600 py-2 text-xs font-semibold text-white"
+                    >
+                      Open Snap to List
+                    </button>
+                  )}
+                  {m.listings?.length ? (
+                    <ul className="space-y-2">
+                      {m.listings.map((p) => (
+                        <li key={p.id} className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                          <Link href={`/product/${p.id}`} className="flex gap-2 p-2 text-left hover:bg-white">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={p.image} alt="" className="h-16 w-16 shrink-0 rounded-lg object-cover" />
+                            <span className="min-w-0 flex-1">
+                              <span className="line-clamp-2 font-semibold text-slate-900">{p.title}</span>
+                              <span className="mt-0.5 block text-xs text-emerald-700">{formatKs(p.price)}</span>
+                              <span className="block text-[11px] text-slate-500">{p.location}</span>
+                            </span>
+                          </Link>
+                          {user && p.userId !== user.id && (
+                            <button
+                              type="button"
+                              onClick={() => void messageSeller(p)}
+                              className="w-full border-t border-slate-200 py-1.5 text-[11px] font-semibold text-emerald-800"
+                            >
+                              Message seller
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
               </div>
             ))}

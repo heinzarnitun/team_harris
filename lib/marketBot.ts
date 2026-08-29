@@ -3,6 +3,12 @@ import { formatKs } from "./money";
 import { aiMatchProduct, parseAiQuery } from "./search";
 import type { Product } from "./types";
 
+export type GuideReply = {
+  text: string;
+  listings: Product[];
+  sellCta: boolean;
+};
+
 function median(nums: number[]) {
   if (!nums.length) return 0;
   const s = [...nums].sort((a, b) => a - b);
@@ -45,7 +51,7 @@ function townshipHint(userLocation: string) {
   return userLocation.split("•")[0].trim();
 }
 
-export function marketGuideReply(raw: string, products: Product[], lang: Lang, userLocation: string): string {
+export function marketGuideReply(raw: string, products: Product[], lang: Lang, userLocation: string): GuideReply {
   const q = raw.trim();
   const my = lang === "my";
   const active = products.filter((p) => p.status !== "sold");
@@ -69,32 +75,55 @@ export function marketGuideReply(raw: string, products: Product[], lang: Lang, u
     const cat = parsed.category || "⚡ Electronics";
     const same = active.filter((p) => p.category === cat);
     const s = stats(same.length ? same : active);
+    const listings = (same.length ? same : active).slice(0, 4);
     if (my) {
-      return `ရောင်းချင်ရင် Snap to List ဖွင့်ပြီး ပစ္စည်းကို ဖရိန်ပြည့်အောင် ရိုက်ပါ (စားပွဲကို မဟုတ်)။ ${cat} လက်ရှိ ${same.length || active.length} ခု၊ ဈေး ${formatKs(s.min)} – ${formatKs(s.max)} (ပျမ်းမျှ ${formatKs(s.med)})။ ချွတ်ယွင်းချက်၊ ထောင့်ဓာတ်ပုံ၊ မျှတသော ဈေး ထည့်ပါ။`;
+      return {
+        text: `ရောင်းချင်ရင် အောက်က Snap to List ကို နှိပ်ပါ။ ပစ္စည်းကို ဖရိန်ပြည့်အောင် ရိုက်ပါ။ ${cat} ဈေး ${formatKs(s.min)} – ${formatKs(s.max)} (ပျမ်းမျှ ${formatKs(s.med)})။ အောက်က ကတ်တွေက နမူနာ listings ဖြစ်သည်။`,
+        listings,
+        sellCta: true,
+      };
     }
-    return `To sell: Snap to List, photograph the item filling the frame (not the table). Typical ${cat} on EcoLoop now: ${formatKs(s.min)} – ${formatKs(s.max)} (median ${formatKs(s.med)} across ${same.length || active.length} listings). Add defects and a fair asking price. Pickup in ${here} closes faster.`;
+    return {
+      text: `Tap Snap to List below to photograph the item (fill the frame). Typical ${cat} now: ${formatKs(s.min)} – ${formatKs(s.max)} (median ${formatKs(s.med)}). Sample live listings under this message — tap a card to open it.`,
+      listings,
+      sellCta: true,
+    };
   }
 
   if (focused.length && (buy || priceQ || parsed.terms.length > 0 || parsed.category)) {
     const s = stats(focused);
-    const sample = focused
-      .slice(0, 4)
-      .map((p) => `• ${p.title} — ${formatKs(p.price)} (${locKey(p)})`)
-      .join("\n");
+    const listings = focused.slice(0, 6);
     if (my) {
-      return `ရှာတွေ့ ${focused.length} ခု။ ဈေး ${formatKs(s.min)} – ${formatKs(s.max)} (ပျမ်းမျှ ${formatKs(s.med)})။\n${sample}\nListing ဖွင့်ပြီး ရောင်းသူကို chat လုပ်ပါ။`;
+      return {
+        text: `ရှာတွေ့ ${focused.length} ခု။ ဈေး ${formatKs(s.min)} – ${formatKs(s.max)} (ပျမ်းမျှ ${formatKs(s.med)})။ အောက်က ကတ်ကို နှိပ်ပြီး listing ဖွင့်ပါ။`,
+        listings,
+        sellCta: false,
+      };
     }
-    return `Found ${focused.length} live listing(s). Range ${formatKs(s.min)} – ${formatKs(s.max)} (median ${formatKs(s.med)}).\n${sample}\nOpen a card to message the seller, or search the feed.`;
+    return {
+      text: `Found ${focused.length} live listing(s). Range ${formatKs(s.min)} – ${formatKs(s.max)} (median ${formatKs(s.med)}). Tap a card below to open the listing, then message the seller.`,
+      listings,
+      sellCta: false,
+    };
   }
 
   if (area || /\bnear me\b/i.test(q)) {
     const focus = local.length ? local : active;
     const s = stats(focus);
     const towns = townRows.map(([t, list]) => `${t} (${list.length})`).join(", ");
+    const listings = focus.slice(0, 6);
     if (my) {
-      return `${here} အနီး live ${focus.length} ခု။ ဈေး ${formatKs(s.min)} – ${formatKs(s.max)}။ နေရာများ: ${towns}။ ဘာဝယ်/ရောင်းချင်လဲ ပြောပါ။`;
+      return {
+        text: `${here} အနီး live ${focus.length} ခု။ ဈေး ${formatKs(s.min)} – ${formatKs(s.max)}။ နေရာများ: ${towns}။ အောက်က ကတ်ကို နှိပ်ပါ။`,
+        listings,
+        sellCta: false,
+      };
     }
-    return `Near ${here}: ${focus.length} live listings, ${formatKs(s.min)} – ${formatKs(s.max)}. Busiest spots: ${towns}. Tell me a product (phone, laptop, books) or “I want to sell…”.`;
+    return {
+      text: `Near ${here}: ${focus.length} live listings, ${formatKs(s.min)} – ${formatKs(s.max)}. Busiest spots: ${towns}. Tap a card below to open it.`,
+      listings,
+      sellCta: false,
+    };
   }
 
   if (priceQ) {
@@ -102,16 +131,27 @@ export function marketGuideReply(raw: string, products: Product[], lang: Lang, u
       const s = stats(list);
       return `• ${c}: ${formatKs(s.min)} – ${formatKs(s.max)} (median ${formatKs(s.med)}, ${list.length} items)`;
     });
-    if (my) return `အမျိုးအစားအလိုက် ဈေး:\n${lines.join("\n")}`;
-    return `Live price bands by category:\n${lines.join("\n")}`;
+    return {
+      text: my ? `အမျိုးအစားအလိုက် ဈေး:\n${lines.join("\n")}\nနမူနာကတ်များကို အောက်တွင် နှိပ်ပါ။` : `Live price bands by category:\n${lines.join("\n")}\nTap a sample card below.`,
+      listings: active.slice(0, 6),
+      sellCta: false,
+    };
   }
 
   const overview = catRows.map(([c, list]) => `${c.replace(/^[^A-Za-z]+/, "")} ${list.length}`).join(" · ");
   const s = stats(active);
   if (my) {
-    return `EcoLoop မှာ live ${active.length} ခု (${overview})။ ဈေး ${formatKs(s.min)} – ${formatKs(s.max)}။ ဥပမာ “ဖုန်း ဝယ်ချင်တယ်”, “လက်ပ်တော့ ရောင်းမယ်”, “အနီးမှာ ဘာရောင်းလဲ”.`;
+    return {
+      text: `EcoLoop မှာ live ${active.length} ခု (${overview})။ ဈေး ${formatKs(s.min)} – ${formatKs(s.max)}။ အောက်က ကတ် သို့မဟုတ် “ဖုန်း ဝယ်ချင်တယ်” လို့ ရိုက်ပါ။`,
+      listings: active.slice(0, 4),
+      sellCta: false,
+    };
   }
-  return `EcoLoop has ${active.length} live listings (${overview}). Overall ${formatKs(s.min)} – ${formatKs(s.max)}. Ask “phones under 400000 Ks”, “what should I sell my laptop for?”, or “what’s selling near me”.`;
+  return {
+    text: `EcoLoop has ${active.length} live listings (${overview}). Overall ${formatKs(s.min)} – ${formatKs(s.max)}. Tap a card below, or ask “phones under 400000 Ks”.`,
+    listings: active.slice(0, 4),
+    sellCta: false,
+  };
 }
 
 export const GUIDE_STARTERS_EN = [
