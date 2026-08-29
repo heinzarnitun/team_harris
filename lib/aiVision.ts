@@ -24,37 +24,42 @@ const DENY =
 
 type Template = Omit<VisionHit, "ok"> & { keys: string[] };
 
+const PHONE: Template = {
+  keys: ["iphone", "phone", "android", "pixel", "samsung", "xiaomi", "oppo", "vivo", "galaxy", "smartphone", "mobile"],
+  title: "Used Smartphone",
+  category: "⚡ Electronics",
+  description:
+    "AI Vision sees a handheld phone (often sitting on a table). Fill the frame with the device, then check ports and battery at meetup.",
+  descriptionMy: "AI Vision က စမတ်ဖုန်းဟု တွေ့သည် (စားပွဲပေါ်တင်ထားလျှင်ပင်)။ တွေ့ဆုံမည့်အခါ ပေါက်များနှင့် ဘက်ထရီ စစ်ပါ။",
+  priceMin: 360000,
+  priceMax: 1440000,
+  price: 792000,
+  conditionScore: 84,
+  conditionLabel: "Good",
+  co2SavedKg: 6.2,
+  tradingMode: "direct",
+  heroUrl: "https://images.unsplash.com/photo-1632661674596-df8be070a5c5?auto=format&fit=crop&w=1200&q=80",
+};
+
+const LAPTOP: Template = {
+  keys: ["macbook", "laptop", "notebook", "mac", "thinkpad", "chromebook"],
+  title: "Used Laptop / MacBook",
+  category: "⚡ Electronics",
+  description: "AI Vision reads a portable computer. Screen, keyboard deck, and chassis look listable as Second-Hand electronics.",
+  descriptionMy: "AI Vision က လက်တော့ပ်/MacBook ဟု ဖတ်သည်။ Second-Hand Electronics အဖြစ် တင်နိုင်သည်။",
+  priceMin: 900000,
+  priceMax: 2160000,
+  price: 1440000,
+  conditionScore: 88,
+  conditionLabel: "Very Good",
+  co2SavedKg: 4.8,
+  tradingMode: "direct",
+  heroUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=1200&q=80",
+};
+
 const TEMPLATES: Template[] = [
-  {
-    keys: ["macbook", "laptop", "notebook", "mac"],
-    title: "Used Laptop / MacBook",
-    category: "⚡ Electronics",
-    description: "AI Vision reads a portable computer. Screen, keyboard deck, and chassis look listable as Second-Hand electronics.",
-    descriptionMy: "AI Vision က လက်တော့ပ်/MacBook ဟု ဖတ်သည်။ Second-Hand Electronics အဖြစ် တင်နိုင်သည်။",
-    priceMin: 900000,
-    priceMax: 2160000,
-    price: 1440000,
-    conditionScore: 88,
-    conditionLabel: "Very Good",
-    co2SavedKg: 4.8,
-    tradingMode: "direct",
-    heroUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    keys: ["iphone", "phone", "android", "pixel", "samsung"],
-    title: "Used Smartphone",
-    category: "⚡ Electronics",
-    description: "AI Vision detected a handheld phone. Check Face ID / ports before meetup. Fair local comps applied.",
-    descriptionMy: "AI Vision က စမတ်ဖုန်းဟု တွေ့သည်။ တွေ့ဆုံမည့်အခါ ပေါက်များနှင့် ဘက်ထရီ စစ်ပါ။",
-    priceMin: 360000,
-    priceMax: 1440000,
-    price: 792000,
-    conditionScore: 84,
-    conditionLabel: "Good",
-    co2SavedKg: 6.2,
-    tradingMode: "direct",
-    heroUrl: "https://images.unsplash.com/photo-1632661674596-df8be070a5c5?auto=format&fit=crop&w=1200&q=80",
-  },
+  LAPTOP,
+  PHONE,
   {
     keys: ["headphone", "headset", "earbud", "airpod", "sony"],
     title: "Wireless Headphones",
@@ -84,21 +89,6 @@ const TEMPLATES: Template[] = [
     co2SavedKg: 3.4,
     tradingMode: "barter",
     heroUrl: "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    keys: ["bike", "bicycle", "cycle", "စက်ဘီး"],
-    title: "City Bicycle",
-    category: "⚡ Electronics",
-    description: "Two-wheel frame detected. Tires and drivetrain should be checked in person. Barter-friendly.",
-    descriptionMy: "စက်ဘီး ဖရိမ် တွေ့သည်။ တာယာနှင့် ကွင်းလုံး ကိုယ်တိုင် စစ်ပါ။",
-    priceMin: 108000,
-    priceMax: 432000,
-    price: 180000,
-    conditionScore: 86,
-    conditionLabel: "Good",
-    co2SavedKg: 15,
-    tradingMode: "barter",
-    heroUrl: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=1200&q=80",
   },
   {
     keys: ["jacket", "coat", "hoodie", "shirt", "dress", "jeans", "bag", "tote", "leather", "fashion"],
@@ -176,7 +166,7 @@ const TEMPLATES: Template[] = [
     heroUrl: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=1200&q=80",
   },
   {
-    keys: ["camera", "canon", "sony", "nikon", "lens"],
+    keys: ["camera", "canon", "nikon", "lens"],
     title: "Used Camera Body",
     category: "⚡ Electronics",
     description: "Camera body / lens barrel. Sensor dust not visible in this still. Electronics Condition Score applied.",
@@ -220,34 +210,141 @@ const TEMPLATES: Template[] = [
     tradingMode: "direct",
     heroUrl: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=1200&q=80",
   },
-  {
-    keys: ["planter", "pot", "vase", "ceramic", "အိုး"],
-    title: "Ceramic Planter (empty)",
-    category: "🌱 Eco-Deals",
-    description: "Empty vessel only — no live plant detected in policy check. Safe to list.",
-    descriptionMy: "အိုးဗလာ။ သက်ရှိအပင် မပါ။ တင်ရန် ခွင့်ပြုသည်။",
-    priceMin: 7200,
-    priceMax: 72000,
-    price: 28800,
-    conditionScore: 94,
-    conditionLabel: "Like New",
-    co2SavedKg: 2.2,
-    tradingMode: "barter",
-    heroUrl: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=1200&q=80",
-  },
 ];
 
-function hashStr(s: string) {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  return h;
+const FURNITURE = TEMPLATES.find((t) => t.title.includes("Furniture"))!;
+
+type Pix = {
+  wood: number;
+  dark: number;
+  bright: number;
+  green: number;
+  skin: number;
+  n: number;
+  varSum: number;
+  lumSum: number;
+};
+
+function addPixel(s: Pix, r: number, g: number, b: number) {
+  const lum = (r + g + b) / 3;
+  s.n++;
+  s.lumSum += lum;
+  s.varSum += lum * lum;
+  if (lum < 72) s.dark++;
+  if (lum > 205) s.bright++;
+  if (r > 90 && r > g && g >= b - 14 && r - b > 22 && lum > 50 && lum < 205) s.wood++;
+  if (g > r + 18 && g > b + 10 && lum > 40) s.green++;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  if (r > 95 && g > 40 && b > 20 && r > g && r > b && Math.abs(r - g) > 15 && max - min > 15 && lum < 220) s.skin++;
 }
 
-function pickTemplate(file: File, blobHint: string): Template {
-  const name = `${file.name} ${blobHint}`.toLowerCase();
-  const hit = TEMPLATES.find((t) => t.keys.some((k) => name.includes(k)));
-  if (hit) return hit;
-  return TEMPLATES[hashStr(`${file.name}|${file.size}|${file.lastModified}`) % TEMPLATES.length];
+function emptyPix(): Pix {
+  return { wood: 0, dark: 0, bright: 0, green: 0, skin: 0, n: 0, varSum: 0, lumSum: 0 };
+}
+
+function ratio(part: number, n: number) {
+  return n ? part / n : 0;
+}
+
+function lumVar(s: Pix) {
+  if (s.n < 2) return 0;
+  const mean = s.lumSum / s.n;
+  return s.varSum / s.n - mean * mean;
+}
+
+function sampleRect(data: Uint8ClampedArray, W: number, x0: number, y0: number, w: number, h: number, step: number) {
+  const s = emptyPix();
+  const x1 = x0 + w;
+  const y1 = y0 + h;
+  for (let y = y0; y < y1; y += step) {
+    for (let x = x0; x < x1; x += step) {
+      const i = (y * W + x) * 4;
+      addPixel(s, data[i], data[i + 1], data[i + 2]);
+    }
+  }
+  return s;
+}
+
+async function inspectPixels(file: File) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await loadImage(url);
+    const canvas = document.createElement("canvas");
+    const max = 240;
+    const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const W = Math.max(24, Math.round(img.naturalWidth * scale));
+    const H = Math.max(24, Math.round(img.naturalHeight * scale));
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.drawImage(img, 0, 0, W, H);
+    const { data } = ctx.getImageData(0, 0, W, H);
+    const step = 3;
+    const full = sampleRect(data, W, 0, 0, W, H, step);
+    const cx = Math.floor(W * 0.22);
+    const cy = Math.floor(H * 0.16);
+    const cw = Math.max(8, Math.floor(W * 0.56));
+    const ch = Math.max(8, Math.floor(H * 0.68));
+    const center = sampleRect(data, W, cx, cy, cw, ch, step);
+    return {
+      aspect: img.naturalWidth / img.naturalHeight,
+      portrait: img.naturalHeight / img.naturalWidth > 1.05,
+      centerDark: ratio(center.dark, center.n),
+      centerWood: ratio(center.wood, center.n),
+      centerBright: ratio(center.bright, center.n),
+      centerSkin: ratio(center.skin, center.n),
+      fullWood: ratio(full.wood, full.n),
+      fullGreen: ratio(full.green, full.n),
+      centerVar: lumVar(center),
+      ringWood: Math.max(0, ratio(full.wood, full.n) - ratio(center.wood, center.n) * 0.35),
+    };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("image"));
+    img.src = src;
+  });
+}
+
+function nameHit(file: File): Template | null {
+  const name = file.name.toLowerCase();
+  return TEMPLATES.find((t) => t.keys.some((k) => name.includes(k))) ?? null;
+}
+
+function pickFromPixels(vis: NonNullable<Awaited<ReturnType<typeof inspectPixels>>>, named: Template | null): Template {
+  if (named && named !== FURNITURE) return named;
+
+  const phoneOnTable =
+    vis.centerWood < 0.32 &&
+    vis.centerSkin < 0.22 &&
+    (vis.ringWood > 0.1 || vis.fullWood > 0.16) &&
+    (vis.centerDark > 0.18 || vis.centerVar > 900 || vis.centerBright > 0.06);
+
+  const darkHandset = vis.centerDark > 0.26 && vis.centerWood < 0.28 && vis.centerSkin < 0.2;
+  const litScreen = vis.centerVar > 1200 && vis.centerWood < 0.3 && vis.centerSkin < 0.25;
+
+  if (named === FURNITURE && !(phoneOnTable || darkHandset || litScreen)) {
+    return FURNITURE;
+  }
+
+  if (phoneOnTable || darkHandset || litScreen || vis.portrait) {
+    if (vis.aspect > 1.25 && vis.centerDark > 0.2) return LAPTOP;
+    return PHONE;
+  }
+
+  if (vis.centerWood > 0.52 && vis.centerDark < 0.14 && vis.fullWood > 0.42 && vis.centerVar < 700) {
+    return FURNITURE;
+  }
+
+  return PHONE;
 }
 
 export async function inspectListingPhoto(file: File): Promise<VisionResult> {
@@ -269,74 +366,51 @@ export async function inspectListingPhoto(file: File): Promise<VisionResult> {
   if (DENY.test(label) || DENY.test(file.name)) {
     return {
       ok: false,
-      reason:
-        "EcoLoop does not list living things, people, pets, or unclear/weird photos. Photograph the object only.",
+      reason: "EcoLoop does not list living things, people, pets, or unclear/weird photos. Photograph the object only.",
       reasonMy: "သက်ရှိ၊ လူ၊ pets သို့မဟုတ် ပုံဆန်းများ တင်၍မရပါ။ ပစ္စည်းကိုသာ ရိုက်ပါ။",
     };
   }
 
-  const dims = await readDims(file);
-  if (!dims) {
+  let vis: Awaited<ReturnType<typeof inspectPixels>> = null;
+  try {
+    vis = await inspectPixels(file);
+  } catch {
+    vis = null;
+  }
+
+  if (!vis) {
     return {
       ok: false,
       reason: "Could not read this image. Try another photo of the object.",
       reasonMy: "ဤပုံကို ဖတ်မရပါ။ ပစ္စည်းကို ထပ်ရိုက်ပါ။",
     };
   }
-  if (dims.w < 120 || dims.h < 120) {
+
+  const named = nameHit(file);
+
+  if (vis.centerSkin > 0.34 && vis.centerDark < 0.12) {
     return {
       ok: false,
-      reason: "Resolution is too low for Condition Score. Use a clearer product photo.",
-      reasonMy: "ပုံကြည်လင်မှု မလုံလောက်ပါ။ ပိုကြည်သော ပစ္စည်းပုံ သုံးပါ။",
+      reason: "This looks like a person or selfie, not a product. Photograph the item only.",
+      reasonMy: "Selfie/လူပုံ နှင့် တူသည်။ ပစ္စည်းကိုသာ ရိုက်ပါ။",
     };
   }
-  if (dims.h / dims.w > 1.85) {
+  if (vis.fullGreen > 0.48) {
     return {
       ok: false,
-      reason: "This looks like a selfie / portrait, not a product. Living subjects are not allowed.",
-      reasonMy: "Selfie/လူပုံ နှင့် တူသည်။ သက်ရှိ တင်၍မရပါ။",
+      reason: "This looks like a living plant or outdoor scene, not a listable object.",
+      reasonMy: "အပင်/ပြင်ပ မြင်ကွင်း နှင့် တူသည်။ ပစ္စည်းကိုသာ ရိုက်ပါ။",
     };
   }
 
-  const fingerprint = hashStr(`${file.name}|${file.size}|${file.lastModified}|${dims.w}x${dims.h}`);
-  if (fingerprint % 19 === 0 && !TEMPLATES.some((t) => t.keys.some((k) => file.name.toLowerCase().includes(k)))) {
-    return {
-      ok: false,
-      reason: "AI Vision could not identify a listable Second-Hand object. Retake a well-lit photo of the item only.",
-      reasonMy: "တင်နိုင်သော Second-Hand ပစ္စည်းဟု မခွဲခြားနိုင်ပါ။ ပစ္စည်းကို အလင်းကောင်းကောင်းဖြင့် ထပ်ရိုက်ပါ။",
-    };
-  }
-
-  const tmpl = pickTemplate(file, `${dims.w}x${dims.h}`);
-  const jitter = (fingerprint % 7) - 3;
-  const price = Math.max(tmpl.priceMin, Math.min(tmpl.priceMax, tmpl.price + jitter * 3600));
+  const tmpl = pickFromPixels(vis, named);
+  const price = Math.max(tmpl.priceMin, Math.min(tmpl.priceMax, tmpl.price));
   return {
     ok: true,
     ...tmpl,
-    title: tmpl.keys.some((k) => file.name.toLowerCase().includes(k))
-      ? tmpl.title
-      : `${tmpl.title} (${file.name.replace(/\.[^.]+$/, "").slice(0, 28) || "untitled"})`,
     price,
-    conditionScore: Math.min(97, Math.max(78, tmpl.conditionScore + (fingerprint % 5) - 2)),
+    conditionScore: tmpl.conditionScore,
   };
-}
-
-function readDims(file: File): Promise<{ w: number; h: number } | null> {
-  return new Promise((resolve) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      const w = img.naturalWidth;
-      const h = img.naturalHeight;
-      URL.revokeObjectURL(url);
-      resolve({ w, h });
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      resolve(null);
-    };
-    img.src = url;
-  });
 }
 
 export function fileToJpegDataUrl(file: File, maxEdge = 1200): Promise<string> {
@@ -367,3 +441,6 @@ export function fileToJpegDataUrl(file: File, maxEdge = 1200): Promise<string> {
     img.src = url;
   });
 }
+
+/** Same scanner as inspectListingPhoto (keeps older import names compiling). */
+export const classifyProductImage = inspectListingPhoto;

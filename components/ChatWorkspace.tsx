@@ -2,25 +2,42 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ImagePlus, Send } from "lucide-react";
+import { ImagePlus, Send, Sparkles } from "lucide-react";
 import { formatKs } from "@/lib/money";
 import { t } from "@/lib/i18n";
+import { GUIDE_STARTERS_EN, GUIDE_STARTERS_MY, marketGuideReply } from "@/lib/marketBot";
 import { useApp } from "./AppProvider";
 import AIDealCopilot from "./AIDealCopilot";
 import MakeOfferModal from "./MakeOfferModal";
 
+const GUIDE_ID = "ecoloop-guide";
+
+type GuideMsg = { id: string; role: "user" | "bot"; text: string };
+
 export default function ChatWorkspace() {
-  const { chats, products, addChatMessage, user, setAuthOpen, lang } = useApp();
+  const { chats, products, addChatMessage, user, setAuthOpen, lang, location } = useApp();
   const params = useSearchParams();
   const requested = params.get("c");
   const [pickedId, setPickedId] = useState<string | null>(null);
   const [mobileShowThread, setMobileShowThread] = useState(Boolean(requested));
   const [draft, setDraft] = useState("");
   const [offerOpen, setOfferOpen] = useState(false);
+  const [guideMsgs, setGuideMsgs] = useState<GuideMsg[]>([
+    {
+      id: "g0",
+      role: "bot",
+      text:
+        lang === "my"
+          ? "မင်္ဂလာပါ — EcoLoop Guide ပါ။ ရောင်းချင်တာ၊ ဝယ်ချင်တာ၊ အနီးအနား ဈေးနှုန်း ပြောပါ။"
+          : "Hi — I’m EcoLoop Guide. Ask what to sell, what to buy, what’s moving in your area, and typical Ks ranges.",
+    },
+  ]);
   const copy = t[lang];
-  const activeId = pickedId || requested || chats[0]?.id || "";
+  const wantGuide = !requested && (!pickedId || pickedId === GUIDE_ID);
+  const activeId = pickedId || requested || GUIDE_ID;
+  const isGuide = activeId === GUIDE_ID || (wantGuide && !chats.some((c) => c.id === activeId));
 
-  const thread = chats.find((c) => c.id === activeId) ?? chats[0];
+  const thread = chats.find((c) => c.id === activeId);
   const product = useMemo(
     () => products.find((p) => p.id === thread?.productId),
     [products, thread?.productId],
@@ -42,38 +59,67 @@ export default function ChatWorkspace() {
     );
   }
 
-  if (!thread || !product) {
-    return (
-      <div className="mx-auto max-w-5xl px-4 py-16 text-center text-slate-500">
-        No conversations yet. Start one from a listing.
-      </div>
-    );
-  }
-
-  const send = async (text: string, offerAmount?: number) => {
+  const sendDeal = async (text: string, offerAmount?: number) => {
+    if (!thread) return;
     const trimmed = text.trim();
     if (!trimmed) return;
     await addChatMessage(thread.id, trimmed, offerAmount);
     setDraft("");
   };
 
+  const sendGuide = (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const reply = marketGuideReply(trimmed, products, lang, location);
+    setGuideMsgs((prev) => [
+      ...prev,
+      { id: `u-${Date.now()}`, role: "user", text: trimmed },
+      { id: `b-${Date.now()}`, role: "bot", text: reply },
+    ]);
+    setDraft("");
+  };
+
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    send(draft);
+    if (isGuide) sendGuide(draft);
+    else void sendDeal(draft);
   };
+
+  const starters = lang === "my" ? GUIDE_STARTERS_MY : GUIDE_STARTERS_EN;
 
   return (
     <div className="mx-auto flex h-[calc(100dvh-8.5rem)] max-w-6xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:h-[calc(100dvh-6rem)]">
       <aside className={`${mobileShowThread ? "hidden md:flex" : "flex"} w-full flex-col border-r border-slate-200 md:w-80`}>
         <div className="border-b border-slate-200 px-4 py-3">
           <h1 className="font-semibold text-slate-900">{copy.messages}</h1>
-          <p className="text-xs text-slate-500">Local deals with AI copilot</p>
+          <p className="text-xs text-slate-500">EcoLoop Guide + local deal chats</p>
         </div>
         <ul className="flex-1 overflow-y-auto">
+          <li>
+            <button
+              type="button"
+              onClick={() => {
+                setPickedId(GUIDE_ID);
+                setMobileShowThread(true);
+              }}
+              className={`flex w-full gap-3 px-4 py-3 text-left hover:bg-slate-50 ${
+                isGuide ? "bg-emerald-50" : ""
+              }`}
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-slate-900">EcoLoop Guide</p>
+                <p className="truncate text-xs text-slate-500">Buy, sell, area prices</p>
+                <p className="truncate text-xs text-slate-400">Always on · live listings</p>
+              </div>
+            </button>
+          </li>
           {chats.map((c) => {
             const p = products.find((prod) => prod.id === c.productId);
             const last = c.messages[c.messages.length - 1];
-            const selected = c.id === thread.id;
+            const selected = !isGuide && c.id === thread?.id;
             return (
               <li key={c.id}>
                 <button
@@ -117,97 +163,154 @@ export default function ChatWorkspace() {
         </ul>
       </aside>
 
-      <section className={`${mobileShowThread ? "flex" : "hidden md:flex"} min-w-0 flex-1 flex-col`}>
-        <header className="flex items-center gap-3 border-b border-slate-200 px-4 py-3">
-          <button
-            type="button"
-            className="mr-1 text-sm text-emerald-700 md:hidden"
-            onClick={() => setMobileShowThread(false)}
-          >
-            Back
-          </button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={product.image} alt="" className="h-12 w-12 rounded-xl object-cover" />
-          <div className="min-w-0">
-            <p className="truncate font-semibold text-slate-900">{product.title}</p>
-            <p className="text-xs text-slate-500">
-              {formatKs(product.price)} · with {thread.otherParty.name}
-              {thread.activeOffer != null ? ` · active offer ${formatKs(thread.activeOffer)}` : ""}
-            </p>
-          </div>
-        </header>
-
-        <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4">
-          <AIDealCopilot onUseSuggestion={setDraft} />
-          {thread.messages.map((m) => {
-            const mine = m.sender === "buyer";
-            return (
-              <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+      {isGuide ? (
+        <section className={`${mobileShowThread ? "flex" : "hidden md:flex"} min-w-0 flex-1 flex-col`}>
+          <header className="flex items-center gap-3 border-b border-slate-200 px-4 py-3">
+            <button
+              type="button"
+              className="mr-1 text-sm text-emerald-700 md:hidden"
+              onClick={() => setMobileShowThread(false)}
+            >
+              Back
+            </button>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-white">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate font-semibold text-slate-900">EcoLoop Guide</p>
+              <p className="text-xs text-slate-500">Market chatbot · {location}</p>
+            </div>
+          </header>
+          <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4">
+            {guideMsgs.map((m) => (
+              <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed break-words ${
-                    mine ? "bg-emerald-600 text-white" : "border border-slate-200 bg-white text-slate-800"
+                  className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm leading-relaxed break-words ${
+                    m.role === "user" ? "bg-emerald-600 text-white" : "border border-slate-200 bg-white text-slate-800"
                   }`}
                 >
-                  <p>{m.text}</p>
-                  {m.offerAmount != null && (
-                    <p className={`mt-1 text-xs font-semibold ${mine ? "text-emerald-100" : "text-emerald-700"}`}>
-                      💰 Offer {formatKs(m.offerAmount)}
-                    </p>
-                  )}
-                  <p className={`mt-1 text-[10px] ${mine ? "text-emerald-100" : "text-slate-400"}`}>{m.timestamp}</p>
+                  {m.text}
                 </div>
               </div>
-            );
-          })}
-        </div>
+            ))}
+            <div className="flex flex-wrap gap-2 pt-1">
+              {starters.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => sendGuide(s)}
+                  className="rounded-full border border-emerald-200 bg-white px-3 py-1 text-xs font-medium text-emerald-800"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+          <form onSubmit={onSubmit} className="flex items-end gap-2 border-t border-slate-200 p-3">
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              rows={1}
+              placeholder={lang === "my" ? "ဝယ်/ရောင်း/ဈေး ပြောပါ..." : "Ask about buying, selling, or local prices..."}
+              className="max-h-32 min-h-[44px] flex-1 resize-y rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            />
+            <button type="submit" className="rounded-xl bg-emerald-600 p-2 text-white hover:bg-emerald-700" aria-label="Send">
+              <Send className="h-5 w-5" />
+            </button>
+          </form>
+        </section>
+      ) : thread && product ? (
+        <section className={`${mobileShowThread ? "flex" : "hidden md:flex"} min-w-0 flex-1 flex-col`}>
+          <header className="flex items-center gap-3 border-b border-slate-200 px-4 py-3">
+            <button
+              type="button"
+              className="mr-1 text-sm text-emerald-700 md:hidden"
+              onClick={() => setMobileShowThread(false)}
+            >
+              Back
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={product.image} alt="" className="h-12 w-12 rounded-xl object-cover" />
+            <div className="min-w-0">
+              <p className="truncate font-semibold text-slate-900">{product.title}</p>
+              <p className="text-xs text-slate-500">
+                {formatKs(product.price)} · with {thread.otherParty.name}
+                {thread.activeOffer != null ? ` · active offer ${formatKs(thread.activeOffer)}` : ""}
+              </p>
+            </div>
+          </header>
 
-        <form onSubmit={onSubmit} className="flex items-end gap-2 border-t border-slate-200 p-3">
-          <button
-            type="button"
-            className="rounded-xl border border-slate-200 p-2 text-slate-500 hover:bg-slate-50"
-            aria-label="Attach image"
-          >
-            <ImagePlus className="h-5 w-5" />
-          </button>
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            rows={1}
-            placeholder="Message with AI copilot..."
-            className="max-h-32 min-h-[44px] flex-1 resize-y rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4">
+            <AIDealCopilot onUseSuggestion={setDraft} />
+            {thread.messages.map((m) => {
+              const mine = m.sender === "buyer";
+              return (
+                <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed break-words ${
+                      mine ? "bg-emerald-600 text-white" : "border border-slate-200 bg-white text-slate-800"
+                    }`}
+                  >
+                    <p>{m.text}</p>
+                    {m.offerAmount != null && (
+                      <p className={`mt-1 text-xs font-semibold ${mine ? "text-emerald-100" : "text-emerald-700"}`}>
+                        💰 Offer {formatKs(m.offerAmount)}
+                      </p>
+                    )}
+                    <p className={`mt-1 text-[10px] ${mine ? "text-emerald-100" : "text-slate-400"}`}>{m.timestamp}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <form onSubmit={onSubmit} className="flex items-end gap-2 border-t border-slate-200 p-3">
+            <button
+              type="button"
+              className="rounded-xl border border-slate-200 p-2 text-slate-500 hover:bg-slate-50"
+              aria-label="Attach image"
+            >
+              <ImagePlus className="h-5 w-5" />
+            </button>
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              rows={1}
+              placeholder="Message with AI copilot..."
+              className="max-h-32 min-h-[44px] flex-1 resize-y rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            />
+            <button
+              type="button"
+              onClick={() => setOfferOpen(true)}
+              className="hidden rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 sm:block"
+            >
+              💰 Make Offer
+            </button>
+            <button type="submit" className="rounded-xl bg-emerald-600 p-2 text-white hover:bg-emerald-700" aria-label="Send">
+              <Send className="h-5 w-5" />
+            </button>
+          </form>
+          <div className="px-3 pb-3 sm:hidden">
+            <button
+              type="button"
+              onClick={() => setOfferOpen(true)}
+              className="w-full rounded-xl border border-emerald-200 bg-emerald-50 py-2 text-sm font-semibold text-emerald-800"
+            >
+              💰 Make Offer
+            </button>
+          </div>
+          <MakeOfferModal
+            open={offerOpen}
+            askingPrice={product.price}
+            onClose={() => setOfferOpen(false)}
+            onSubmit={(amount) => sendDeal(`I'd like to offer ${formatKs(amount)} for this item.`, amount)}
           />
-          <button
-            type="button"
-            onClick={() => setOfferOpen(true)}
-            className="hidden rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 sm:block"
-          >
-            💰 Make Offer
-          </button>
-          <button
-            type="submit"
-            className="rounded-xl bg-emerald-600 p-2 text-white hover:bg-emerald-700"
-            aria-label="Send"
-          >
-            <Send className="h-5 w-5" />
-          </button>
-        </form>
-        <div className="px-3 pb-3 sm:hidden">
-          <button
-            type="button"
-            onClick={() => setOfferOpen(true)}
-            className="w-full rounded-xl border border-emerald-200 bg-emerald-50 py-2 text-sm font-semibold text-emerald-800"
-          >
-            💰 Make Offer
-          </button>
-        </div>
-      </section>
-
-      <MakeOfferModal
-        open={offerOpen}
-        askingPrice={product.price}
-        onClose={() => setOfferOpen(false)}
-        onSubmit={(amount) => send(`I'd like to offer ${formatKs(amount)} for this item.`, amount)}
-      />
+        </section>
+      ) : (
+        <section className="hidden min-w-0 flex-1 items-center justify-center text-sm text-slate-500 md:flex">
+          Open EcoLoop Guide or a listing chat.
+        </section>
+      )}
     </div>
   );
 }
