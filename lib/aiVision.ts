@@ -148,7 +148,7 @@ const TEMPLATES: Template[] = [
     conditionLabel: "Like New",
     co2SavedKg: 3.1,
     tradingMode: "direct",
-    heroUrl: "https://images.unsplash.com/photo-1507473880760-e72b5d19b4ea?auto=format&fit=crop&w=1200&q=80",
+    heroUrl: "https://images.pexels.com/photos/112811/pexels-photo-112811.jpeg?auto=compress&cs=tinysrgb&w=1200",
   },
   {
     keys: ["cooker", "kettle", "blender", "toaster", "kitchen", "rice"],

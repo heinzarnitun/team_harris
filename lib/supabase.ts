@@ -1,3 +1,4 @@
+import { listingPhoto, rewriteBrokenPhoto, rewriteGallery } from "./listingPhotos";
 import { supabase } from "./supabaseClient";
 import type { ChatMessage, ChatThread, Product, ProductDefect, TradingMode } from "./types";
 
@@ -55,7 +56,7 @@ export function mapProduct(row: ProductRow): Product {
     originalPrice: Number(row.original_price ?? row.price),
     marketAverage: Number(meta.marketAverage ?? row.original_price ?? row.price),
     category: row.category as Product["category"],
-    image: row.image_url ?? "",
+    image: listingPhoto(row.id, row.image_url),
     distance: row.distance ?? "",
     location: row.location ?? "",
     aiConditionScore: score,
@@ -77,8 +78,11 @@ export function mapProduct(row: ProductRow): Product {
     tradingType: row.trading_type,
     images: Array.from(
       new Set(
-        [row.image_url, ...((row.gallery as string[] | null) ?? []), ...((meta.images as string[] | undefined) ?? [])].filter(
-          (u): u is string => Boolean(u),
+        rewriteGallery(
+          row.id,
+          [row.image_url, ...((row.gallery as string[] | null) ?? []), ...((meta.images as string[] | undefined) ?? [])].filter(
+            (u): u is string => Boolean(u),
+          ).map(rewriteBrokenPhoto),
         ),
       ),
     ),
