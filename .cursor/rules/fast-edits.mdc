@@ -1,0 +1,6 @@
+---
+description: Prefer direct file edits; skip terminals and tests
+alwaysApply: true
+---
+
+Just write/edit the code files directly. Do not run terminal commands or tests. Make changes fast by editing source files only.
