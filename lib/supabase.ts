@@ -31,10 +31,11 @@ type ProductRow = {
   profiles: Profile | Profile[] | null;
 };
 
-function throwDb(error: { message?: string; details?: string; hint?: string; code?: string } | null) {
+function throwDb(error: Record<string, unknown> | { message?: string; details?: string; hint?: string; code?: string } | null) {
   if (!error) return;
-  const msg = [error.message, error.details, error.hint, error.code].filter(Boolean).join(" — ");
-  throw new Error(msg || "Database request failed");
+  const e = error as { message?: string; details?: string; hint?: string; code?: string };
+  const msg = [e.message, e.details, e.hint, e.code].filter(Boolean).join(" — ");
+  throw new Error(msg || JSON.stringify(error) || "Database request failed");
 }
 
 function one<T>(v: T | T[] | null | undefined): T | null {
@@ -81,7 +82,9 @@ export function mapProduct(row: ProductRow): Product {
         ),
       ),
     ),
-    status: row.status === "sold" || row.status === "hidden" ? row.status : "active",
+    status: row.status === "sold" || row.status === "hidden" || meta.status === "sold" || meta.status === "hidden"
+      ? ((row.status === "hidden" || meta.status === "hidden" ? "hidden" : "sold") as "sold" | "hidden")
+      : "active",
   };
 }
 
@@ -268,11 +271,19 @@ export async function updateProduct(
     status?: "active" | "sold" | "hidden";
   },
 ) {
-  const { error } = await supabase.from("products").update(patch).eq("id", id);
+  const row: Record<string, unknown> = {};
+  if (patch.title != null) row.title = patch.title;
+  if (patch.price != null) row.price = patch.price;
+  if (patch.gallery != null) row.gallery = patch.gallery;
+  if (patch.status != null) row.status = patch.status;
+
+  const { data, error } = await supabase.from("products").update(row).eq("id", id).select("id,status,title,price").maybeSingle();
   if (error) throwDb(error);
+  if (!data) throw new Error("Update did not save. Sign in as the listing owner and try again.");
 }
 
 export async function deleteProduct(id: string) {
-  const { error } = await supabase.from("products").delete().eq("id", id);
+  const { data, error } = await supabase.from("products").delete().eq("id", id).select("id").maybeSingle();
   if (error) throwDb(error);
+  if (!data) throw new Error("Delete did not run. Sign in as the listing owner and try again.");
 }
