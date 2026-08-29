@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
+import { formatKs } from "@/lib/money";
 import type { Product } from "@/lib/types";
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -23,7 +24,7 @@ export default function ProductCard({ product }: { product: Product }) {
           </span>
         )}
         <span className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 backdrop-blur-md sm:text-xs">
-          🌱 -{product.co2SavedKg}kg CO2
+          🌱 -{product.co2SavedKg}kg CO₂
         </span>
         {product.barterAvailable && (
           <span className="absolute bottom-2 left-2 rounded-full bg-slate-900/80 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-md">
@@ -36,8 +37,8 @@ export default function ProductCard({ product }: { product: Product }) {
           {product.title}
         </h3>
         <div className="flex flex-wrap items-baseline gap-2">
-          <span className="text-base font-bold text-emerald-700">${product.price}</span>
-          <span className="text-xs text-slate-400 line-through">${product.originalPrice}</span>
+          <span className="text-base font-bold text-emerald-700">{formatKs(product.price)}</span>
+          <span className="text-xs text-slate-400 line-through">{formatKs(product.originalPrice)}</span>
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
             {product.distance}
           </span>

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Sparkles, Upload, X } from "lucide-react";
 import { AI_SCAN_STEPS } from "@/lib/mockData";
 import { t } from "@/lib/i18n";
+import { formatKs } from "@/lib/money";
 import type { TradingMode } from "@/lib/types";
 import { useApp } from "./AppProvider";
 
@@ -23,7 +24,7 @@ export default function AISnapToListModal() {
   const [title, setTitle] = useState("Compact Oak Side Table");
   const [category, setCategory] = useState("🔄 Barter/Swap");
   const [descLang, setDescLang] = useState<"en" | "my">("en");
-  const [price, setPrice] = useState(24);
+  const [price, setPrice] = useState(86400);
   const [mode, setMode] = useState<TradingMode>("direct");
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
@@ -36,7 +37,7 @@ export default function AISnapToListModal() {
     setTitle("Compact Oak Side Table");
     setCategory("🔄 Barter/Swap");
     setDescLang("en");
-    setPrice(24);
+    setPrice(86400);
     setMode("direct");
     setError("");
   };
@@ -68,7 +69,7 @@ export default function AISnapToListModal() {
       await addProduct({
         title,
         price: mode === "giveaway" ? 0 : price,
-        originalPrice: 48,
+        originalPrice: 172800,
         category,
         imageUrl:
           preview && !preview.startsWith("blob:")
@@ -223,20 +224,21 @@ export default function AISnapToListModal() {
 
               <div>
                 <p className="text-sm font-medium text-slate-700">
-                  AI fair price range · ${price}
+                  AI fair price range · {formatKs(price)}
                 </p>
                 <input
                   type="range"
-                  min={20}
-                  max={28}
+                  min={72000}
+                  max={100800}
+                  step={3600}
                   value={price}
                   onChange={(e) => setPrice(Number(e.target.value))}
                   className="mt-2 w-full accent-emerald-600"
                 />
                 <div className="mt-1 flex justify-between text-[11px] text-slate-500">
-                  <span>$20 Fast Sale</span>
-                  <span>$24 Fair Value</span>
-                  <span>$28 High Value</span>
+                  <span>72,000 Ks Fast Sale</span>
+                  <span>86,400 Ks Fair Value</span>
+                  <span>100,800 Ks High Value</span>
                 </div>
               </div>
 

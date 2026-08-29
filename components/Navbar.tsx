@@ -30,9 +30,8 @@ export default function Navbar() {
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 lg:gap-4">
         <Link href="/" className="flex shrink-0 items-center gap-1.5 font-semibold tracking-tight text-slate-900">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 text-sm text-white shadow-sm">
-            ✨
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/ecoloop-logo.jpg" alt="EcoLoop" className="h-9 w-9 rounded-xl object-cover" />
           <span className="hidden sm:inline">EcoLoop</span>
         </Link>
 

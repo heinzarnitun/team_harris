@@ -3,7 +3,7 @@
 import { MapPin, Sparkles } from "lucide-react";
 
 const SUGGESTIONS = [
-  { label: "Counter-offer $22", fill: "Would you take $22 if I pick up today at City Mall?" },
+  { label: "Counter-offer 79,200 Ks", fill: "Would you take 79,200 Ks if I pick up today at City Mall?" },
   { label: "Ask about condition", fill: "Can you share a close-up of any scratches or wear?" },
   { label: "Propose public meetup", fill: "Let’s meet at City Mall Central Lobby — public & monitored." },
 ];
@@ -20,7 +20,7 @@ export default function AIDealCopilot({
         AI Deal Copilot
       </div>
       <p className="mb-3 text-xs leading-relaxed text-slate-600">
-        Based on local comps and seller trust, a $22–$24 close is likely if you offer a same-day public meetup.
+        Based on local comps and seller trust, a 79,200–86,400 Ks close is likely if you offer a same-day public meetup.
       </p>
       <div className="flex flex-wrap gap-2">
         {SUGGESTIONS.map((s) => (

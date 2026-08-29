@@ -10,10 +10,11 @@ export const MOCK_CATEGORIES: CategoryName[] = [
 ];
 
 export const MOCK_LOCATIONS = [
-  "Downtown • 1.5 km",
-  "Riverside • 2.4 km",
-  "University Quarter • 3.1 km",
-  "East Market • 4.8 km",
+  "Downtown Yangon • 1.5 km",
+  "Hlaing • 2.4 km",
+  "Kamayut • 3.1 km",
+  "Bahan • 4.8 km",
+  "Mandalay Chanayethazan • 2.0 km",
 ];
 
 export const MOCK_PRODUCTS: Product[] = [
@@ -277,7 +278,7 @@ export const MOCK_PRODUCTS: Product[] = [
     aiVerified: true,
     barterAvailable: true,
     description:
-      "Hot-swappable Keychron K2 with brown switches. Bluetooth + USB-C. Open to swapping for a compact wooden desk under $50.",
+      "Hot-swappable Keychron K2 with brown switches. Bluetooth + USB-C. Open to swapping for a compact wooden desk under 180,000 Ks.",
     descriptionMy:
       "Hot-swap Keychron K2 (brown switch)။ Bluetooth နှင့် USB-C ပါသည်။ ကျစ်လစ်သော သစ်သားစားပွဲနှင့် လဲလှယ်နိုင်သည်။",
   },

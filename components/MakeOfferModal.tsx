@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
+import { formatKs } from "@/lib/money";
 
 export default function MakeOfferModal({
   open,
@@ -27,16 +28,16 @@ export default function MakeOfferModal({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <p className="text-sm text-slate-500">Asking price ${askingPrice}</p>
+        <p className="text-sm text-slate-500">Asking price {formatKs(askingPrice)}</p>
         <div className="relative mt-3">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
           <input
             type="number"
             min={1}
             value={amount}
             onChange={(e) => setAmount(Number(e.target.value))}
-            className="w-full rounded-xl border border-slate-200 py-2.5 pl-7 pr-3 text-lg font-semibold focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            className="w-full rounded-xl border border-slate-200 py-2.5 px-3 pr-14 text-lg font-semibold focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">Ks</span>
         </div>
         <button
           type="button"

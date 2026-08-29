@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, BadgeCheck, MessageCircle, RefreshCw } from "lucide-react";
+import { formatKs } from "@/lib/money";
 import type { Product, ProductDefect } from "@/lib/types";
 import { t } from "@/lib/i18n";
 import { useApp } from "./AppProvider";
@@ -88,8 +89,8 @@ export default function ProductDetail({ product }: { product: Product }) {
             <p className="text-sm text-slate-500">{product.category}</p>
             <h1 className="mt-1 break-words text-2xl font-bold text-slate-900">{product.title}</h1>
             <div className="mt-3 flex flex-wrap items-baseline gap-2">
-              <span className="text-3xl font-bold text-emerald-700">${product.price}</span>
-              <span className="text-sm text-slate-400 line-through">${product.originalPrice}</span>
+              <span className="text-3xl font-bold text-emerald-700">{formatKs(product.price)}</span>
+              <span className="text-sm text-slate-400 line-through">{formatKs(product.originalPrice)}</span>
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
                 {product.distance} · {product.location}
               </span>
@@ -105,8 +106,8 @@ export default function ProductDetail({ product }: { product: Product }) {
             </div>
             <p className="mt-2 text-sm text-slate-600">
               {below
-                ? `Priced ${delta}% below local market value (avg $${product.marketAverage})`
-                : `Asking is ${Math.abs(delta)}% above local average ($${product.marketAverage})`}
+                ? `Priced ${delta}% below local market value (avg ${formatKs(product.marketAverage)})`
+                : `Asking is ${Math.abs(delta)}% above local average (${formatKs(product.marketAverage)})`}
             </p>
           </div>
 

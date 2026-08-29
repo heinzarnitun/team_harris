@@ -20,7 +20,7 @@ export default function ProductGrid() {
   if (filtered.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-16 text-center text-slate-500">
-        No listings match those AI filters yet. Try widening your search.
+      No listings match that AI search yet. Try “wooden desk under 200000 Ks” or “iphone”.
       </div>
     );
   }

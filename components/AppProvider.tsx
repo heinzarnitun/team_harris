@@ -12,6 +12,7 @@ import {
 import { MOCK_CHATS, MOCK_LOCATIONS } from "@/lib/mockData";
 import type { Lang } from "@/lib/i18n";
 import type { CategoryName, ChatThread, Product } from "@/lib/types";
+import { aiMatchProduct, parseAiQuery } from "@/lib/search";
 import {
   createProduct,
   getChats,
@@ -234,17 +235,13 @@ export function filterProducts(
     query: string;
   },
 ) {
-  const q = opts.query.trim().toLowerCase();
+  const q = opts.query.trim();
+  const parsed = q ? parseAiQuery(q) : null;
   return products.filter((p) => {
     if (opts.category !== "All" && p.category !== opts.category) return false;
     if (opts.aiVerifiedOnly && !p.aiVerified) return false;
     if (opts.barterOnly && !p.barterAvailable) return false;
-    if (!q) return true;
-    return (
-      p.title.toLowerCase().includes(q) ||
-      p.description.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q) ||
-      p.location.toLowerCase().includes(q)
-    );
+    if (!parsed) return true;
+    return aiMatchProduct(p, parsed);
   });
 }

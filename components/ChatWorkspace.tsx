@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ImagePlus, Send } from "lucide-react";
+import { formatKs } from "@/lib/money";
 import { t } from "@/lib/i18n";
 import { useApp } from "./AppProvider";
 import AIDealCopilot from "./AIDealCopilot";
@@ -130,8 +131,8 @@ export default function ChatWorkspace() {
           <div className="min-w-0">
             <p className="truncate font-semibold text-slate-900">{product.title}</p>
             <p className="text-xs text-slate-500">
-              ${product.price} · with {thread.otherParty.name}
-              {thread.activeOffer != null ? ` · active offer $${thread.activeOffer}` : ""}
+              {formatKs(product.price)} · with {thread.otherParty.name}
+              {thread.activeOffer != null ? ` · active offer ${formatKs(thread.activeOffer)}` : ""}
             </p>
           </div>
         </header>
@@ -150,7 +151,7 @@ export default function ChatWorkspace() {
                   <p>{m.text}</p>
                   {m.offerAmount != null && (
                     <p className={`mt-1 text-xs font-semibold ${mine ? "text-emerald-100" : "text-emerald-700"}`}>
-                      💰 Offer ${m.offerAmount}
+                      💰 Offer {formatKs(m.offerAmount)}
                     </p>
                   )}
                   <p className={`mt-1 text-[10px] ${mine ? "text-emerald-100" : "text-slate-400"}`}>{m.timestamp}</p>
@@ -205,7 +206,7 @@ export default function ChatWorkspace() {
         open={offerOpen}
         askingPrice={product.price}
         onClose={() => setOfferOpen(false)}
-        onSubmit={(amount) => send(`I'd like to offer $${amount} for this item.`, amount)}
+        onSubmit={(amount) => send(`I'd like to offer ${formatKs(amount)} for this item.`, amount)}
       />
     </div>
   );

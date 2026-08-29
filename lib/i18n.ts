@@ -2,11 +2,11 @@ export type Lang = "en" | "my";
 
 export const t = {
   en: {
-    searchPh: "Search with AI (e.g., 'compact wooden desk under $50')...",
+    searchPh: "Search with AI (e.g., 'compact wooden desk under 180000 Ks')...",
     sell: "+ Sell Item",
     heroKicker: "EcoLoop neighborhood pulse",
-    hero: "Local Circular Impact: 1,240 kg CO2 saved this week in your area",
-    heroMyHint: "ဤအပတ် သင့်အနီးအနားတွင် Circular Economy မှ CO2 ၁,၂၄၀ kg သက်သာခဲ့သည်။",
+    hero: "Local Circular Impact: 1,240 kg CO₂ saved this week in your area",
+    heroMyHint: "ယခုအပတ် သင့်အနီးအနားတွင် Circular Economy မှ CO₂ ၁,၂၄၀ kg သက်သာခဲ့သည်။",
     aiVerifiedOnly: "✨ AI Verified Only",
     barterOnly: "🔄 Barter/Swap Available",
     negotiate: "Negotiate / Chat",
@@ -32,10 +32,10 @@ export const t = {
     profile: "Profile",
   },
   my: {
-    searchPh: "AI ဖြင့် ရှာပါ (ဥပမာ compact wooden desk under $50)...",
+    searchPh: "AI ဖြင့် ရှာပါ (ဥပမာ compact wooden desk under 180000 Ks)...",
     sell: "+ ပစ္စည်းတင်ရန်",
     heroKicker: "EcoLoop ရပ်ကွက်သတင်း",
-    hero: "Local Circular Impact: ဤအပတ် သင့်ဧရိယာတွင် CO2 ၁,၂၄၀ kg သက်သာခဲ့သည်",
+    hero: "Local Circular Impact: ယခုအပတ် သင့်ဧရိယာတွင် CO₂ ၁,၂၄၀ kg သက်သာခဲ့သည်",
     heroMyHint: "Second-Hand ဝယ်ယူမှုဖြင့် Circular Economy ကို ပံ့ပိုးပါ။",
     aiVerifiedOnly: "✨ AI Verified သာ",
     barterOnly: "🔄 Barter/Swap ရနိုင်သည်",

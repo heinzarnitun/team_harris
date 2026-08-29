@@ -53,7 +53,7 @@ export default function ProfilePage() {
           </div>
           <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-900">
             <Leaf className="mb-1 h-4 w-4" />
-            <p className="font-semibold">CO2 Impact</p>
+            <p className="font-semibold">CO₂ Impact</p>
             <p className="text-xs">Circular Economy member</p>
           </div>
         </div>
