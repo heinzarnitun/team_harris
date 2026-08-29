@@ -27,7 +27,12 @@ export default function AuthModal() {
       else await register(name || email.split("@")[0], email, password);
       setAuthOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Auth failed");
+      const raw = err instanceof Error ? err.message : "Auth failed";
+      setError(
+        /failed to fetch|networkerror|load failed/i.test(raw)
+          ? "Cannot reach the database from this browser. Use http://localhost:3000 (not a blocked preview) and retry."
+          : raw,
+      );
     } finally {
       setBusy(false);
     }
